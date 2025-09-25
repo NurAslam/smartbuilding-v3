@@ -3,6 +3,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import psycopg2.extras
 
+from app.realtime.scheduler import scheduler
+
 from app.core.config import settings
 from ..db import get_conn, init_table, insert_row
 from ..generator import generate_hour
@@ -20,6 +22,21 @@ APP_VERSION = "1.1.0"
 @router.get("/status")
 def status():
     return {"status": "ok", "version": APP_VERSION, "tz": settings.APP_TZ, "floor_area_m2": settings.FLOOR_AREA_M2}
+
+@router.get("/scheduler-status")
+def scheduler_status():
+    jobs = []
+    for j in scheduler.get_jobs():
+        jobs.append({
+            "id": j.id,
+            "next_run_time": j.next_run_time.isoformat() if j.next_run_time else None,
+        })
+    return {
+        "running": scheduler.running,
+        "tz": settings.APP_TZ,
+        "now_wib": datetime.now(tz=WIB).isoformat(),
+        "jobs": jobs,
+    }
 
 
 @router.post("/generate-now")

@@ -12,7 +12,7 @@ from app.simulation.routers.models import router as sim_models
 # Realtime routers & lifecycle
 from app.realtime.routers.sensor import router as sensor_router
 from app.realtime.db import init_table
-from app.realtime.scheduler import scheduler
+from app.realtime.scheduler import scheduler, setup_scheduler   # <— tambahkan import setup_scheduler
 
 
 setup_logging()
@@ -46,9 +46,10 @@ def status():
         }
     }
 
-
 @app.on_event("startup")
 def on_startup():
     init_table()
-    if settings.ENABLE_SCHEDULER and not scheduler.running:
-        scheduler.start()
+    if settings.ENABLE_SCHEDULER:
+        setup_scheduler()                 # <— DAFTARKAN JOB DI SINI
+        if not scheduler.running:
+            scheduler.start()  
