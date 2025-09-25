@@ -1,0 +1,43 @@
+{
+  "model_id": "4721a9f0-510f-4416-82a7-dc87662560c4",
+  "created_at": "2025-09-25T04:40:13.539586Z",
+  "chosen_model": "XGB",
+  "chosen_metric": "RMSE",
+  "metrics": {
+    "RF": {
+      "MSE": 0.006840325766351027,
+      "RMSE": 0.08270626195368176,
+      "MAPE": 26.126789897104214
+    },
+    "XGB": {
+      "MSE": 0.005341837182641029,
+      "RMSE": 0.07308787302036521,
+      "MAPE": 20.370624542236328
+    },
+    "SVR": {
+      "MSE": 0.011888457809970982,
+      "RMSE": 0.10903420477066351,
+      "MAPE": 56.80378767881688
+    },
+    "LSTM": {
+      "MSE": 0.015979906544089317,
+      "RMSE": 0.12641165509591795,
+      "MAPE": 50.55302810668945
+    }
+  },
+  "feature_cols": [
+    "temp",
+    "humidity",
+    "wind_speed",
+    "pm2_5",
+    "surface_temp"
+  ],
+  "building_info": {
+    "name": "Perusahaan 1",
+    "lat": 12.0,
+    "lon": 28.0,
+    "jenis_ceiling": "Insulated External Ceiling",
+    "ac_mode": "AC"
+  },
+  "app_version": "1.2.0"
+}
