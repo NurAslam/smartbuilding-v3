@@ -2,9 +2,7 @@ from __future__ import annotations
 import numpy as np
 import math
 from typing import Dict
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Input, LSTM, Dense
+from sklearn.neural_network import MLPRegressor
 
 def clip01(x):
     return np.clip(x, 0.0, 1.0)
@@ -39,13 +37,6 @@ def evaluate_cont(y_true: np.ndarray, y_pred_raw: np.ndarray) -> Dict[str, float
     mape = float(np.nanmean(np.abs((y_true - y_pred) / denom) * 100.0))
     if np.isnan(mape): mape = 0.0
     return {"MSE": mse, "RMSE": rmse, "MAPE": mape}
-
-
-def make_lstm(n_features: int):
-    model = Sequential([Input(shape=(1, n_features)), LSTM(16), Dense(1)])
-    model.compile(optimizer="adam", loss="mse")
-    return model
-
 
 def clamp(x, lo, hi): return max(lo, min(hi, x))
 

@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Any, Dict, List
 from fastapi import HTTPException
 from joblib import dump as joblib_dump, load as joblib_load
-from tensorflow.keras.models import load_model as keras_load
 
 ARTIFACTS_DIR = "./artifacts"
 os.makedirs(ARTIFACTS_DIR, exist_ok=True)
@@ -18,30 +17,26 @@ def _model_dir(mid: str) -> str:
 def save_artifacts(
     model_id: str,
     best_model_name: str,
-    final_model: Any,
-    metrics: Dict[str, Dict[str, float]],
-    feature_cols: List[str],
-    building_info: Dict[str, Any],
-    chosen_metric: str,
-    energy_state: Dict[str, Any],
+    final_model,
+    metrics,
+    feature_cols,
+    building_info,
+    chosen_metric,
+    energy_state,
     dataset_bytes: bytes,
-    app_version: str
-) -> None:
+    app_version: str) -> None:
     d = _model_dir(model_id)
     os.makedirs(d, exist_ok=True)
 
+    # simpan dataset mentah
     with open(os.path.join(d, "dataset.csv"), "wb") as f:
         f.write(dataset_bytes)
 
-    if best_model_name == "LSTM":
-        keras_path = os.path.join(d, "model_lstm.h5")
-        scaler_path = os.path.join(d, "scaler.joblib")
-        final_model["model"].save(keras_path)
-        joblib_dump(final_model["scaler"], scaler_path)
-    else:
-        model_path = os.path.join(d, "model.joblib")
-        joblib_dump(final_model, model_path)
+    # >>> SEMUA model (termasuk “LSTM” palsu) disimpan via joblib
+    model_path = os.path.join(d, "model.joblib")
+    joblib_dump(final_model, model_path)
 
+    # energy regressor & meta (tetap seperti semula)
     if energy_state.get("energy_regressor") is not None:
         joblib_dump(energy_state["energy_regressor"], os.path.join(d, "energy_lr.joblib"))
     energy_meta = {
@@ -71,23 +66,15 @@ def load_artifacts(model_id: str) -> Dict[str, Any]:
     d = _model_dir(model_id)
     if not os.path.isdir(d):
         raise HTTPException(status_code=404, detail="model_id tidak ditemukan.")
+
     with open(os.path.join(d, "meta.json"), "r") as f:
         meta = json.load(f)
 
-    best = meta["chosen_model"]
-    if best == "LSTM":
-        model_path = os.path.join(d, "model_lstm.h5")
-        scaler_path = os.path.join(d, "scaler.joblib")
-        if not os.path.exists(model_path) or not os.path.exists(scaler_path):
-            raise HTTPException(status_code=500, detail="Artifact LSTM hilang.")
-        model = keras_load(model_path, compile=False)
-        scaler = joblib_load(scaler_path)
-        final_model = {"model": model, "scaler": scaler}
-    else:
-        model_path = os.path.join(d, "model.joblib")
-        if not os.path.exists(model_path):
-            raise HTTPException(status_code=500, detail="Artifact model hilang.")
-        final_model = joblib_load(model_path)
+    # >>> SELALU load joblib (untuk semua model termasuk 'LSTM' palsu)
+    model_path = os.path.join(d, "model.joblib")
+    if not os.path.exists(model_path):
+        raise HTTPException(status_code=500, detail="Artifact model.joblib hilang atau model lama (TensorFlow) tidak didukung di server ini.")
+    final_model = joblib_load(model_path)
 
     with open(os.path.join(d, "energy_meta.json"), "r") as f:
         energy_meta = json.load(f)
@@ -103,6 +90,7 @@ def load_artifacts(model_id: str) -> Dict[str, Any]:
         "temp_min": energy_meta.get("temp_min"),
         "temp_max": energy_meta.get("temp_max"),
     }
+
 
 
 def list_artifacts() -> List[Dict[str, Any]]:

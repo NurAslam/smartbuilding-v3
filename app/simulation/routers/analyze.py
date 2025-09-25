@@ -3,6 +3,8 @@ import uuid
 from typing import Literal, Dict
 import numpy as np
 
+from sklearn.preprocessing import StandardScaler
+
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from ..schemas import AnalyzeResponse
 from ..state import STATE

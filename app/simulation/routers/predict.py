@@ -73,9 +73,9 @@ def predict(req: PredictRequest):
 
     if best_name == "LSTM":
         scaler = final_model["scaler"]
-        lstm_model = final_model["model"]
+        lstm_model = final_model["model"]   
         xs = scaler.transform(x).reshape((1, 1, x.shape[1]))
-        y_pred = float(lstm_model.predict(xs, verbose=0).flatten()[0])
+        y_pred = float(lstm_model.predict(xs)[0])
     else:
         y_pred = float(final_model.predict(x)[0])
 
