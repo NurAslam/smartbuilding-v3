@@ -7,8 +7,7 @@ from app.core.config import settings
 WIB = ZoneInfo(settings.APP_TZ)
 np.random.seed(123)
 
-# PMV (discrete) bands & labels
-TEMP_BANDS = [18, 20, 23, 27, 29, 32]  # batas kanan inklusif
+TEMP_BANDS = [16, 18, 20, 24, 28, 32]  
 PMV_LABELS = {
     -3: "sangat dingin",
     -2: "dingin",
