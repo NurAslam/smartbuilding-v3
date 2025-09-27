@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
 import psycopg2.extras
 from app.core.config import settings
+from zoneinfo import ZoneInfo
 from .db import get_conn
 
+WIB = ZoneInfo(settings.APP_TZ)
 
 def _range_daily(ref_wib: datetime):
     start = ref_wib.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -26,50 +28,66 @@ def _range_monthly(ref_wib: datetime):
 
 
 def _summary_query(start_wib: datetime, end_wib: datetime):
-    t0_utc = start_wib.astimezone(timezone.utc)
-    t1_utc = end_wib.astimezone(timezone.utc)
+    """
+    Summary window HARUS tepat 24 jam (atau sesuai start/end) berdasarkan WIB,
+    tapi filter dilakukan di kolom ts (UTC) agar pasti match.
+
+    Hasil: avg_* lengkap + total energy/cost + metrik coverage.
+    """
+    # 1) Hitung batas UTC untuk window WIB
+    t0_utc = start_wib.astimezone(ZoneInfo("UTC"))
+    t1_utc = end_wib.astimezone(ZoneInfo("UTC"))
 
     sql = """
-    WITH cte_win AS (
-      SELECT ts, energy_kwh, cost_idr, pmv, ppd
-      FROM sensors_hourly
-      WHERE ts >= %(t0)s AND ts < %(t1)s
-    ),
-    cte_agg AS (
+    WITH win AS (
       SELECT
-        COALESCE(SUM(energy_kwh), 0) AS total_kwh,
-        COALESCE(SUM(cost_idr), 0)   AS total_cost_idr,
-        COALESCE(AVG(pmv), 0)        AS avg_pmv,
-        COALESCE(AVG(ppd), 0)        AS avg_ppd
-      FROM cte_win
+        ts,
+        temp, humidity, wind_speed, pm25, co2,
+        latency_sec, uptime_pct,
+        energy_kwh, eui_kwh_m2, cost_idr,
+        pmv, ppd
+      FROM sensors_hourly
+      WHERE ts >= %(t0_utc)s AND ts < %(t1_utc)s   -- filter di UTC
     ),
-    cte_per_hour AS (
-      SELECT EXTRACT(HOUR FROM (ts AT TIME ZONE %(tz)s))::INT AS hour_of_day,
-             AVG(energy_kwh) AS avg_energy_kwh
-      FROM cte_win
-      GROUP BY 1
-      ORDER BY 1
+    agg AS (
+      SELECT
+        COUNT(*)                               AS row_count,
+
+        COALESCE(AVG(temp), 0)                 AS avg_temp,
+        COALESCE(AVG(humidity), 0)             AS avg_humidity,
+        COALESCE(AVG(co2), 0)                  AS avg_co2,
+        COALESCE(AVG(pm25), 0)                 AS avg_pm25,
+        COALESCE(AVG(energy_kwh), 0)           AS avg_energy_kwh,
+        COALESCE(AVG(eui_kwh_m2), 0)           AS avg_eui_kwh_m2,
+        COALESCE(AVG(ppd), 0)                  AS avg_ppd,
+        COALESCE(AVG(pmv), 0)                  AS avg_pmv,
+        COALESCE(AVG(latency_sec), 0)          AS avg_latency_sec,
+        COALESCE(AVG(uptime_pct), 0)           AS avg_uptime_pct,
+        COALESCE(AVG(cost_idr), 0)             AS avg_cost_idr,
+
+        COALESCE(SUM(energy_kwh), 0)           AS total_energy_kwh,
+        COALESCE(SUM(cost_idr), 0)             AS total_cost_idr
+      FROM win
     )
     SELECT
-      (SELECT total_kwh FROM cte_agg) AS total_kwh,
-      (SELECT total_cost_idr FROM cte_agg) AS total_cost_idr,
-      (SELECT avg_pmv FROM cte_agg) AS avg_pmv,
-      (SELECT avg_ppd FROM cte_agg) AS avg_ppd,
-      COALESCE(
-        (SELECT JSON_AGG(JSON_BUILD_OBJECT('hour', hour_of_day, 'avg_energy_kwh', avg_energy_kwh))
-           FROM cte_per_hour),
-        '[]'::json
-      ) AS hourly_avg;
+      row_count,
+      avg_temp, avg_humidity, avg_co2, avg_pm25,
+      avg_energy_kwh, avg_eui_kwh_m2, avg_ppd, avg_pmv,
+      avg_latency_sec, avg_uptime_pct, avg_cost_idr,
+      total_energy_kwh, total_cost_idr
+    FROM agg;
     """
-    params = {"t0": t0_utc, "t1": t1_utc, "tz": settings.APP_TZ}
+    params = {"t0_utc": t0_utc, "t1_utc": t1_utc}
 
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute(sql, params)
         row = cur.fetchone() or {}
 
-    total_kwh = float(row.get("total_kwh") or 0.0)
+    total_kwh = float(row.get("total_energy_kwh") or 0.0)
     row["total_eui_kwh_m2"] = total_kwh / settings.FLOOR_AREA_M2
+
     return row
+
 
 
 # =========================
@@ -170,3 +188,5 @@ def series_range_monthly(ref_wib: datetime, months: int):
     start = _add_months(ref_month0, -months + 1)
     end = _add_months(ref_month0, 1)
     return start, end
+
+

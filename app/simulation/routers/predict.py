@@ -63,13 +63,14 @@ def predict(req: PredictRequest):
     }
     ekwh = float(estimate_energy(req.temp, temp_state))
     cost = float(ekwh * settings.TARIFF_IDR_PER_KWH)
-
+    co2_val = req.co2 if (req.co2 is not None) else 450.0
     if ac_mode_meta == "AC":
         surface_val = surface_ac(req.temp, resolved_name)
     else:
         surface_val = surface_non_ac(T_OUT_REF, resolved_name)
 
-    x = np.array([[req.temp, req.humidity, req.wind_speed, req.pm2_5, surface_val]], dtype=np.float32)
+    
+    x = np.array([[req.temp, req.humidity, req.wind_speed, req.pm2_5, surface_val, co2_val]], dtype=np.float32)
 
     if best_name == "LSTM":
         scaler = final_model["scaler"]

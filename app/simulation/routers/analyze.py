@@ -22,11 +22,11 @@ SIM_APP_VERSION = "1.2.0"
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(
-    file: UploadFile = File(..., description="CSV minimal: temp,humidity,wind_speed,pm2_5; opsional: date,EnergyConsumption,SquareFootage"),
+    file: UploadFile = File(..., description="CSV minimal: temp,humidity,wind_speed,pm2_5, co2; opsional: date,EnergyConsumption,SquareFootage"),
     building_name: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    ceiling: str = Form(..., description="Nama Ceiling (persis seperti di /list-ceiling, alias didukung)"),
+    ceiling: str = Form(..., description="Nama Ceiling (persis seperti di list-ceiling)"),
     ac_mode: Literal["AC","NON_AC"] = Form("AC"),
     model_selection_metric: Literal["RMSE", "MSE", "MAPE"] = Form("RMSE"),
     persist: bool = Form(True),
@@ -45,7 +45,7 @@ async def analyze(
 
     df = clean_and_prepare(df_raw, ceiling_name=resolved_name, ac_mode=ac_mode)
 
-    feature_cols = ["temp", "humidity", "wind_speed", "pm2_5", "surface_temp"]
+    feature_cols = ["temp", "humidity", "wind_speed", "pm2_5", "surface_temp", "co2"]
     X_full = df[feature_cols].values.astype(np.float32)
     y_full = df["comfort_target"].values.astype(np.float32)
 

@@ -1,0 +1,28 @@
+siap—ini catatan/artinya masing-masing field dari output summary kamu:
+
+* **granularity**: `"weekly"` → window ringkasan adalah 7×24 jam (1 minggu) menurut WIB.
+* **start_wib / end_wib**: batas waktu window dalam zona **Asia/Jakarta**. Umumnya **[start_wib, end_wib)** (start inklusif, end eksklusif).
+
+### Ringkasan data & unit
+
+* **row_count**: `120` → jumlah baris data yang ditemukan dalam window (idealnya 168 baris untuk 1 minggu jika ada 1 baris per jam).
+* **avg_temp**: `26.1173` → suhu rata-rata (°C).
+* **avg_humidity**: `62.1867` → kelembapan rata-rata (%RH).
+* **avg_co2**: `450` → konsentrasi CO₂ rata-rata (ppm).
+* **avg_pm25**: `17.3858` → PM2.5 rata-rata (µg/m³).
+* **avg_energy_kwh**: `0.5716` → konsumsi energi rata-rata per baris (kWh).
+* **avg_eui_kwh_m2**: `0.00038107` → EUI rata-rata (kWh/m²) per baris.
+  Rumus per baris: `eui_kwh_m2 = energy_kwh / floor_area_m2`.
+* **avg_pmv**: `0.3833` → PMV rata-rata (indeks −3 s/d +3).
+* **avg_ppd**: `17.74` → PPD rata-rata (%) – prediksi persentase tidak puas termal.
+* **avg_latency_sec**: `0.5` → rata-rata latensi sensor (detik). FE bisa tandai “not compliant” jika > 1 detik.
+* **avg_uptime_pct**: `99.9000` → rata-rata uptime (%) pada window.
+* **avg_cost_idr**: `637.19375` → biaya rata-rata per baris (IDR).
+
+### Agregat total (untuk laporan)
+
+* **total_energy_kwh**: `68.59302` → total energi pada window (kWh).
+* **total_cost_idr**: `76463.25` → total biaya pada window (IDR).
+* **total_eui_kwh_m2**: `0.04572868` → total EUI pada window (kWh/m²).
+  Rumus: `total_energy_kwh / floor_area_m2`.
+

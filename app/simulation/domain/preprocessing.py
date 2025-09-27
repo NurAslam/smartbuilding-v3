@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from pandas import Series, DataFrame
 from fastapi import HTTPException
+from .surface import surface_ac, surface_non_ac, resolve_ceiling, T_OUT_REF
 
 
 def _get_col_case_insensitive(df: pd.DataFrame, target: str) -> Optional[str]:
@@ -22,7 +23,7 @@ def derive_surface_series(
     Hitung kolom surface_temp. Import fungsi surface dilakukan DI DALAM fungsi
     untuk menghindari circular import dengan surface.py.
     """
-    from .surface import surface_ac, surface_non_ac, resolve_ceiling, T_OUT_REF
+    
 
     name = resolve_ceiling(ceiling_name)
 
@@ -64,14 +65,20 @@ def clean_and_prepare(
     hum_c   = _get_col_case_insensitive(df, "humidity")
     wind_c  = _get_col_case_insensitive(df, "wind_speed")
     pm_c    = _get_col_case_insensitive(df, "pm2_5")
-
-    df = df.dropna(subset=[temp_c, hum_c, wind_c, pm_c]).copy()
+    co2_c    = _get_col_case_insensitive(df, "co2")
+    if co2_c is None:
+        df['co2'] = 450.0
+    else:
+        df['co2'] = df[co2_c].astype(float)
+    
+    df = df.dropna(subset=[temp_c, hum_c, wind_c, pm_c, co2_c]).copy()
 
     cscore = compute_comfort_weighted(
         df[temp_c].to_numpy(dtype=float),
         df[hum_c].to_numpy(dtype=float),
         df[wind_c].to_numpy(dtype=float),
         df[pm_c].to_numpy(dtype=float),
+        df[co2_c].to_numpy(dtype=float),
     )
     df["comfort_target"] = cscore.astype(np.float32)
 
@@ -84,7 +91,8 @@ def clean_and_prepare(
         temp_c: "temp",
         hum_c: "humidity",
         wind_c: "wind_speed",
-        pm_c: "pm2_5"
+        pm_c: "pm2_5",
+        co2_c: "co2"
     })
 
     return df.reset_index(drop=True)

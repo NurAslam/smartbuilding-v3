@@ -1,0 +1,49 @@
+dua field itu buat nge-track fault tolerance (syarat: auto-recovery < 5 detik):
+
+recovery_sec
+Lama waktu pemulihan saat terjadi downtime (dalam detik).
+
+Kalau nggak ada downtime, nilainya 0.
+
+Kalau ada downtime, kita isi dengan lama recovery (di seeder sekarang disimulasikan 1–5 detik).
+
+recovery_ok
+Flag compliance: true kalau recovery_sec ≤ 5, false kalau lebih dari itu.
+Ini langsung memetakan aturan “harus recovery otomatis < 5 detik”.
+
+Kenapa perlu?
+
+Uptime bilang “seberapa sering sistem hidup” (via uptime_ok).
+
+Recovery bilang “kalau sempat mati, seberapa cepat pulih”.
+Jadi dua metrik ini saling melengkapi: availability dan resiliency.
+
+Dipakai di mana?
+
+/realtime/sensor/latest → tampil mentah per baris untuk debug/monitor.
+
+/realtime/sensor/summary/* → ada agregat:
+
+uptime_pct (persentase baris uptime_ok=true)
+
+recovery_breach_cnt (jumlah kejadian recovery_ok=false) ⇒ gampang buat alarm.
+
+Perilaku di generator (seeder)
+
+Kadang-kadang kita simulasikan down_event (probabilitas kecil).
+
+Jika down → set recovery_sec (1–5 dtk) & hitung recovery_ok = (recovery_sec ≤ 5).
+
+Jika tidak down → recovery_sec = 0, recovery_ok = true.
+
+Contoh bacanya
+{
+  "uptime_ok": false,
+  "recovery_sec": 7,
+  "recovery_ok": false
+}
+
+
+Artinya ada downtime dan recovery butuh 7 detik ⇒ melanggar SLO 5 detik.
+
+Kalau kamu mau, kita juga bisa tambahkan alert sederhana: tandai status: "critical" di summary kalau recovery_breach_cnt > 0 atau uptime_pct < 99.

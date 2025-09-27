@@ -28,15 +28,12 @@ def save_artifacts(
     d = _model_dir(model_id)
     os.makedirs(d, exist_ok=True)
 
-    # simpan dataset mentah
     with open(os.path.join(d, "dataset.csv"), "wb") as f:
         f.write(dataset_bytes)
 
-    # >>> SEMUA model (termasuk “LSTM” palsu) disimpan via joblib
     model_path = os.path.join(d, "model.joblib")
     joblib_dump(final_model, model_path)
 
-    # energy regressor & meta (tetap seperti semula)
     if energy_state.get("energy_regressor") is not None:
         joblib_dump(energy_state["energy_regressor"], os.path.join(d, "energy_lr.joblib"))
     energy_meta = {
@@ -70,7 +67,6 @@ def load_artifacts(model_id: str) -> Dict[str, Any]:
     with open(os.path.join(d, "meta.json"), "r") as f:
         meta = json.load(f)
 
-    # >>> SELALU load joblib (untuk semua model termasuk 'LSTM' palsu)
     model_path = os.path.join(d, "model.joblib")
     if not os.path.exists(model_path):
         raise HTTPException(status_code=500, detail="Artifact model.joblib hilang atau model lama (TensorFlow) tidak didukung di server ini.")

@@ -1,0 +1,44 @@
+{
+  "model_id": "20a43ee7-c4a5-419b-a49b-8261e3e69eb0",
+  "created_at": "2025-09-27T04:34:28.329596Z",
+  "chosen_model": "XGB",
+  "chosen_metric": "RMSE",
+  "metrics": {
+    "RF": {
+      "MSE": 0.006805057921253371,
+      "RMSE": 0.08249277496395288,
+      "MAPE": 25.497067408333006
+    },
+    "XGB": {
+      "MSE": 0.00483129546046257,
+      "RMSE": 0.069507520891358,
+      "MAPE": 34.21576690673828
+    },
+    "SVR": {
+      "MSE": 0.014413091411734422,
+      "RMSE": 0.12005453515687953,
+      "MAPE": 64.80175679339163
+    },
+    "LSTM": {
+      "MSE": 0.05817895010113716,
+      "RMSE": 0.2412031303717619,
+      "MAPE": 214.88992309570312
+    }
+  },
+  "feature_cols": [
+    "temp",
+    "humidity",
+    "wind_speed",
+    "pm2_5",
+    "surface_temp",
+    "co2"
+  ],
+  "building_info": {
+    "name": "test2",
+    "lat": 12.0,
+    "lon": 2.0,
+    "jenis_ceiling": "DGU Window (Shaded)",
+    "ac_mode": "AC"
+  },
+  "app_version": "1.2.0"
+}

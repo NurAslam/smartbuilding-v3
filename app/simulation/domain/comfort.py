@@ -1,14 +1,14 @@
 from __future__ import annotations
 import numpy as np
 import math
-from typing import Dict
+from typing import Dict, Optional
 from sklearn.neural_network import MLPRegressor
 
 def clip01(x):
     return np.clip(x, 0.0, 1.0)
 
 
-def compute_comfort_weighted(temp: np.ndarray, hum: np.ndarray, wind: np.ndarray, pm: np.ndarray) -> np.ndarray:
+def compute_comfort_weighted(temp: np.ndarray, hum: np.ndarray, wind: np.ndarray, pm: np.ndarray, co2: Optional[np.ndarray] = None,) -> np.ndarray:
     temp_hot  = clip01((temp - 27.0) / 6.0)
     temp_cold = clip01((20.0 - temp) / 5.0)
     humidity_dev = clip01(np.abs(hum - 50.0) / 30.0)

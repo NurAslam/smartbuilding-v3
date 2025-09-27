@@ -15,6 +15,7 @@ class PredictRequest(BaseModel):
     humidity: float
     wind_speed: float
     pm2_5: float
+    co2 : Optional[float]  = None
     model_id: Optional[str] = None
     square_footage: Optional[float] = None
 

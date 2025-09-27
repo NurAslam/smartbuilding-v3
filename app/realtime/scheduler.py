@@ -13,7 +13,7 @@ scheduler = AsyncIOScheduler(timezone=settings.APP_TZ)
 WIB = ZoneInfo(settings.APP_TZ)
 
 def hourly_job():
-    """Generate & insert 1 row untuk jam saat ini (dibulatkan ke :00 WIB)."""
+
     try:
         ts_now = datetime.now(tz=WIB)
         ts_hour = ts_now.replace(minute=0, second=0, microsecond=0)
@@ -23,10 +23,6 @@ def hourly_job():
         logging.exception("[scheduler] error saat hourly_job")
 
 def setup_scheduler():
-    """
-    Daftarkan job di proses yang sama tempat scheduler.start() dijalankan.
-    Dipanggil dari app.main:on_startup().
-    """
     trigger = CronTrigger(minute=0, second=0, timezone=settings.APP_TZ)
     # replace_existing=True agar tidak dobel ketika auto-reload / restart
     scheduler.add_job(

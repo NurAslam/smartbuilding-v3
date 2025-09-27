@@ -9,11 +9,12 @@ from app.simulation.routers.analyze import router as sim_analyze
 from app.simulation.routers.predict import router as sim_predict
 from app.simulation.routers.models import router as sim_models
 
+
 # Realtime routers & lifecycle
 from app.realtime.routers.sensor import router as sensor_router
 from app.realtime.db import init_table
 from app.realtime.scheduler import scheduler, setup_scheduler   # <— tambahkan import setup_scheduler
-
+from app.realtime.routers.grafik import router as monitoring_series 
 
 setup_logging()
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
@@ -26,13 +27,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Prefix sama seperti rancangan gabungan sebelumnya
+
 app.include_router(sim_info,    prefix="/simulation")
 app.include_router(sim_analyze, prefix="/simulation")
 app.include_router(sim_predict, prefix="/simulation")
 app.include_router(sim_models,  prefix="/simulation")
 
 app.include_router(sensor_router, prefix="/realtime")
+app.include_router(monitoring_series, prefix="/realtime")
 
 
 @app.get("/status")
