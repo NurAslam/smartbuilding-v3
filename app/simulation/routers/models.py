@@ -24,13 +24,20 @@ def get_model(model_id: str = Path(...)):
     if ceiling_val:
         info["type"] = ceiling_val
 
+    # Filter out residuals from metrics for response (they're only used in boxplot)
+    metrics_for_response = {}
+    for model_name, model_metrics in meta["metrics"].items():
+        metrics_for_response[model_name] = {
+            k: v for k, v in model_metrics.items() if k != "residuals"
+        }
+
     return ModelDetail(
         model_id=meta["model_id"],
         created_at=meta["created_at"],
         building_info=info,
         chosen_model=meta["chosen_model"],
         chosen_metric=meta["chosen_metric"],
-        metrics=meta["metrics"],
+        metrics=metrics_for_response,
         feature_cols=meta["feature_cols"],
         app_version=meta.get("app_version", ""),
     )
