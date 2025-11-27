@@ -63,7 +63,7 @@ def _series_bucket(start_wib: datetime, end_wib: datetime, bucket_sql: str):
       SUM(energy_kwh)   AS total_energy_kwh,
       SUM(cost_idr)     AS total_cost_idr,
       COUNT(*)          AS count
-    FROM sensors_hourly
+    FROM sensor_hourly
     WHERE ts >= %(t0)s AND ts < %(t1)s
     GROUP BY 1
     ORDER BY 1 ASC;

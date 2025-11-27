@@ -2,7 +2,7 @@
 Forecasting module untuk daily, weekly, dan monthly predictions.
 Menggunakan LSTM dan SimpleRNN yang dioptimasi untuk CPU (stateless, layer minimal).
 
-Data source: sensors_hourly (real monitoring data)
+Data source: sensor_hourly (real monitoring data)
 Automatic update: Model dilatih ulang setiap data baru tersedia
 Persistence: Model disimpan ke disk dan di-load ulang
 

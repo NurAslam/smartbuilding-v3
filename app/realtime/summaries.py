@@ -46,7 +46,7 @@ def _summary_query(start_wib: datetime, end_wib: datetime):
         latency_sec, uptime_pct,
         energy_kwh, eui_kwh_m2, cost_idr,
         pmv, ppd
-      FROM sensors_hourly
+      FROM sensor_hourly
       WHERE ts >= %(t0_utc)s AND ts < %(t1_utc)s   -- filter di UTC
     ),
     agg AS (
@@ -127,7 +127,7 @@ def series_query(bucket: str, start_wib: datetime, end_wib: datetime):
       AVG(pmv)         AS avg_pmv,
       AVG(ppd)         AS avg_ppd,
       COUNT(*)         AS n
-    FROM sensors_hourly
+    FROM sensor_hourly
     WHERE ts >= %(t0)s AND ts < %(t1)s
     GROUP BY 1
     ORDER BY 1 ASC;

@@ -1,7 +1,7 @@
 """
 Forecasting endpoints untuk daily, weekly, dan monthly forecasts.
 Menggunakan LSTM dan RNN models dari domain.forecast.
-Data source: sensors_hourly (sama seperti grafik monitoring)
+Data source: sensor_hourly (sama seperti grafik monitoring)
 Automatic update: Model otomatis dilatih ulang setiap ada data baru dari database
 """
 
@@ -85,7 +85,7 @@ def _series_bucket(start_wib: datetime, end_wib: datetime, bucket_sql: str, metr
     SELECT
       {bucket_sql} AS bucket,
       AVG({col_name}) AS metric_value
-    FROM sensors_hourly
+    FROM sensor_hourly
     WHERE ts >= %(t0)s AND ts < %(t1)s
     GROUP BY 1
     ORDER BY 1 ASC;
@@ -100,7 +100,7 @@ def _series_bucket(start_wib: datetime, end_wib: datetime, bucket_sql: str, metr
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     
     if not rows:
-        raise HTTPException(status_code=404, detail=f"Tidak ada data untuk forecast ({metric}). Pastikan sensors_hourly table punya data.")
+        raise HTTPException(status_code=404, detail=f"Tidak ada data untuk forecast ({metric}). Pastikan sensor_hourly table punya data.")
     
     values = np.array([float(r["metric_value"]) for r in rows])
     return values
@@ -138,7 +138,7 @@ def forecast_daily_endpoint(
 ):
     """
     Forecast 24 jam ke depan dari hourly historical data (dari database).
-    Data automatically updated dari sensors_hourly.
+    Data automatically updated dari sensor_hourly.
     
     Query params:
     - model_type: "lstm" atau "rnn"

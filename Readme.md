@@ -247,7 +247,7 @@ Opsional `ref_date=YYYY-MM-DD` (WIB).
 
 #### 7) Forecast Endpoints (NEW) - LSTM/RNN Predictions
 
-Endpoint untuk forecast cuaca/metrik 7-30 hari ke depan menggunakan **LSTM neural networks**. Data source dari `sensors_hourly` tabel (real monitoring data). Model otomatis di-retrain setiap ada data baru.
+Endpoint untuk forecast cuaca/metrik 7-30 hari ke depan menggunakan **LSTM neural networks**. Data source dari `sensor_hourly` tabel (real monitoring data). Model otomatis di-retrain setiap ada data baru.
 
 ##### A. `GET /realtime/forecast/daily`
 
@@ -365,7 +365,7 @@ GET /realtime/forecast/monthly?model_type=lstm&metric=temp&days=90
 
 **Catatan Penting:**
 
-- **Data source**: `sensors_hourly` tabel (real monitoring data dari database)
+- **Data source**: `sensor_hourly` tabel (real monitoring data dari database)
 - **Model**: LSTM atau SimpleRNN (32 units, optimized untuk CPU)
 - **Lookback window**: 7 timesteps (7 jam untuk daily, 7 hari untuk weekly/monthly)
 - **Caching**: Model otomatis disimpan ke `/tmp/bima_forecast_models/` dan di-reload jika data belum berubah

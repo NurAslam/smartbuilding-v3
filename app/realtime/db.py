@@ -12,7 +12,7 @@ def get_conn():
 
 def init_table():
     ddl = """
-    CREATE TABLE IF NOT EXISTS sensors_hourly (
+    CREATE TABLE IF NOT EXISTS sensor_hourly (
         id BIGSERIAL PRIMARY KEY,
         ts TIMESTAMPTZ NOT NULL UNIQUE,      -- UTC
         temp REAL NOT NULL,
@@ -38,7 +38,7 @@ def init_table():
         dayofweek TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-    CREATE INDEX IF NOT EXISTS idx_sensors_hourly_ts_desc ON sensors_hourly (ts DESC);
+    CREATE INDEX IF NOT EXISTS idx_sensor_hourly_ts_desc ON sensor_hourly (ts DESC);
     """
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute(ddl)
@@ -46,7 +46,7 @@ def init_table():
 
 def insert_row(row: dict):
     sql = """
-    INSERT INTO sensors_hourly 
+    INSERT INTO sensor_hourly 
     (ts, temp, humidity, wind_speed, pm25, co2, latency_sec, uptime_pct,
     energy_kwh, cost_idr, eui_kwh_m2, pmv, ppd, pmv_label, dayofweek)
 

@@ -57,7 +57,7 @@ def latest(n: int = Query(50, ge=1, le=1000)):
     SELECT (ts AT TIME ZONE %s) AS ts_local,
            temp, humidity, wind_speed, pm25, co2, latency_sec, uptime_pct,
            energy_kwh, cost_idr, eui_kwh_m2, pmv, ppd, pmv_label, dayofweek
-    FROM sensors_hourly
+    FROM sensor_hourly
     ORDER BY ts DESC
     LIMIT %s;
     """
