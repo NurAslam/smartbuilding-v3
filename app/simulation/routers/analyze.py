@@ -63,7 +63,15 @@ async def analyze(
     metrics: Dict[str, Dict[str, float]] = train_and_eval_all(X_train, y_train, X_test, y_test)
 
     chosen_metric = model_selection_metric
-    best_model_name = min(["RF", "XGB", "SVR", "LSTM"], key=lambda m: metrics[m][chosen_metric])
+    # evaluate using the same metric (RMSE default) — choose best (lowest) model
+    best_model_name = min([
+        "LinearRegression",
+        "DecisionTree",
+        "KNN",
+        "SVM",
+        "RandomForest",
+        "XGBoost",
+    ], key=lambda m: metrics[m][chosen_metric])
 
     final_model = refit_final_model(best_model_name, X_full, y_full)
 
@@ -88,9 +96,16 @@ async def analyze(
     STATE["feature_cols"] = feature_cols
     STATE["last_model_id"] = model_id
 
+    # Extract only aggregate metrics for response (exclude residuals)
+    metrics_for_response = {}
+    for model_name, model_metrics in metrics.items():
+        metrics_for_response[model_name] = {
+            k: v for k, v in model_metrics.items() if k != "residuals"
+        }
+
     return AnalyzeResponse(
         feature_cols=feature_cols,
-        metrics=metrics,
+        metrics=metrics_for_response,
         chosen_model=best_model_name,
         chosen_metric=chosen_metric,
         model_id=model_id,

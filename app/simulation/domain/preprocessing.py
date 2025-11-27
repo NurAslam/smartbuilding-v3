@@ -71,7 +71,7 @@ def clean_and_prepare(
     else:
         df['co2'] = df[co2_c].astype(float)
     
-    df = df.dropna(subset=[temp_c, hum_c, wind_c, pm_c, co2_c]).copy()
+    df = df.dropna(subset=[temp_c, hum_c, wind_c, pm_c, 'co2']).copy()
 
     cscore = compute_comfort_weighted(
         df[temp_c].to_numpy(dtype=float),

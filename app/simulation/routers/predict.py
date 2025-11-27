@@ -72,13 +72,9 @@ def predict(req: PredictRequest):
     
     x = np.array([[req.temp, req.humidity, req.wind_speed, req.pm2_5, surface_val, co2_val]], dtype=np.float32)
 
-    if best_name == "LSTM":
-        scaler = final_model["scaler"]
-        lstm_model = final_model["model"]   
-        xs = scaler.transform(x).reshape((1, 1, x.shape[1]))
-        y_pred = float(lstm_model.predict(xs)[0])
-    else:
-        y_pred = float(final_model.predict(x)[0])
+    # Final model objects are returned consistently (for KNN/SVM we use Pipeline with scaler),
+    # so we can call `predict` directly for all supported models.
+    y_pred = float(final_model.predict(x)[0])
 
     ppv_int = int(np.rint(np.clip(y_pred, -3, 3)))
     ppd_val = round(pmv_to_ppd(ppv_int), 2)

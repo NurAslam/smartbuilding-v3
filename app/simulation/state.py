@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 
 STATE: Dict[str, Any] = {
-    "best_model_name": None,     # "RF" | "XGB" | "SVR" | "LSTM"
+    "best_model_name": None,     # "LinearRegression" | "DecisionTree" | "KNN" | "SVM" | "RandomForest" | "XGBoost"
     "final_model": None,         # model for inference
     "feature_cols": ["temp", "humidity", "wind_speed", "pm2_5", "co2","surface_temp"],
     "metrics": {},

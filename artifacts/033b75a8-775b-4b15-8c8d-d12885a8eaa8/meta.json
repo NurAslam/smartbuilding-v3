@@ -1,0 +1,54 @@
+{
+  "model_id": "033b75a8-775b-4b15-8c8d-d12885a8eaa8",
+  "created_at": "2025-11-27T04:54:18.290394Z",
+  "chosen_model": "XGBoost",
+  "chosen_metric": "RMSE",
+  "metrics": {
+    "LinearRegression": {
+      "MSE": 0.2871904671192169,
+      "RMSE": 0.5359015461063878,
+      "MAPE": 916.5284423828125
+    },
+    "DecisionTree": {
+      "MSE": 0.011132616889316485,
+      "RMSE": 0.10551121688861562,
+      "MAPE": 64.08389654204417
+    },
+    "KNN": {
+      "MSE": 0.06009545922279358,
+      "RMSE": 0.24514375215940867,
+      "MAPE": 189.34902954101562
+    },
+    "SVM": {
+      "MSE": 0.02229748215595837,
+      "RMSE": 0.14932341462730608,
+      "MAPE": 140.88615204492368
+    },
+    "RandomForest": {
+      "MSE": 0.005673428024716122,
+      "RMSE": 0.07532216157756044,
+      "MAPE": 38.940313240863695
+    },
+    "XGBoost": {
+      "MSE": 0.0029623755253851414,
+      "RMSE": 0.054427709168999035,
+      "MAPE": 46.21233367919922
+    }
+  },
+  "feature_cols": [
+    "temp",
+    "humidity",
+    "wind_speed",
+    "pm2_5",
+    "surface_temp",
+    "co2"
+  ],
+  "building_info": {
+    "name": "eferfw",
+    "lat": 0.0,
+    "lon": 0.0,
+    "jenis_ceiling": "Internal Wall",
+    "ac_mode": "AC"
+  },
+  "app_version": "1.2.0"
+}

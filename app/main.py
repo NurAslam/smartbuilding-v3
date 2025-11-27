@@ -12,6 +12,7 @@ from app.simulation.routers.models import router as sim_models
 
 # Realtime routers & lifecycle
 from app.realtime.routers.sensor import router as sensor_router
+from app.realtime.routers.forecast import router as forecast_router
 from app.realtime.db import init_table
 from app.realtime.scheduler import scheduler, setup_scheduler   # <— tambahkan import setup_scheduler
 from app.realtime.routers.grafik import router as monitoring_series 
@@ -34,6 +35,7 @@ app.include_router(sim_predict, prefix="/simulation")
 app.include_router(sim_models,  prefix="/simulation")
 
 app.include_router(sensor_router, prefix="/realtime")
+app.include_router(forecast_router, prefix="/realtime")
 app.include_router(monitoring_series, prefix="/realtime")
 
 

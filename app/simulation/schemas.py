@@ -49,6 +49,22 @@ class SurfaceComfortResponse(BaseModel):
     label: str
 
 
+# ======================== Forecasting Schemas ========================
+
+class ForecastResponse(BaseModel):
+    """Response untuk forecast endpoints"""
+    granularity: str  # "daily", "weekly", "monthly"
+    forecast_hours: Optional[int] = None  # untuk daily
+    forecast_days: Optional[int] = None  # untuk weekly/monthly
+    forecast: List[float]  # array of predicted values
+    model_used: str  # "LSTM" atau "RNN"
+    ref_datetime: Optional[str] = None  # untuk daily (ISO format)
+    ref_date: Optional[str] = None  # untuk weekly/monthly (YYYY-MM-DD)
+    forecast_start: str  # ISO datetime atau date
+    forecast_end: str  # ISO datetime atau date
+    forecast_days_labels: Optional[List[str]] = None  # day names untuk weekly
+
+
 class ModelDetail(BaseModel):
     model_id: str
     created_at: str

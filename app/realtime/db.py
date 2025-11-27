@@ -46,7 +46,7 @@ def init_table():
 
 def insert_row(row: dict):
     sql = """
-    INSER INTO sensors_hourly 
+    INSERT INTO sensors_hourly 
     (ts, temp, humidity, wind_speed, pm25, co2, latency_sec, uptime_pct,
     energy_kwh, cost_idr, eui_kwh_m2, pmv, ppd, pmv_label, dayofweek)
 

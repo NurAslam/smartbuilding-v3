@@ -2,6 +2,9 @@ from __future__ import annotations
 import numpy as np
 from typing import Dict
 
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.pipeline import Pipeline
@@ -11,8 +14,7 @@ from xgboost import XGBRegressor
 
 # evaluasi tetap dari modulmu yang lama
 from .comfort import evaluate_cont
-# <<< PENTING: make_lstm sekarang dari fake_lstm (MLP), bukan dari comfort/tensorflow
-from .fake_lstm import make_lstm
+from .model_params import MODEL_PARAMS
 
 
 def train_and_eval_all(
@@ -20,92 +22,115 @@ def train_and_eval_all(
     y_train: np.ndarray,
     X_test:  np.ndarray,
     y_test:  np.ndarray,
-) -> Dict[str, Dict[str, float]]:
-    """Latih RF/XGB/SVR dan 'LSTM' (fake MLP) pada holdout, lalu kembalikan metrics."""
-    metrics: Dict[str, Dict[str, float]] = {}
+) -> Dict[str, Dict]:
+    """Latih beberapa regresor pada holdout, kembalikan metrics dan residuals.
+    
+    Returns:
+        Dict dengan struktur:
+        {
+            "LinearRegression": {
+                "RMSE": float, "MSE": float, "MAPE": float,
+                "residuals": list of errors per sample
+            },
+            ...
+        }
+    """
+    metrics: Dict[str, Dict] = {}
+    # Build and fit requested models. We follow the user's explicit list:
+    # Linear Regression, Decision Tree, KNN, SVM, Random Forest, XGBoost
 
-    # --- RF ---
-    rf = RandomForestRegressor(n_estimators=200, max_depth=None, random_state=42, n_jobs=-1)
+    # Linear Regression
+    lr_params = MODEL_PARAMS.get("LinearRegression", {})
+    lr = LinearRegression(**lr_params)
+    lr.fit(X_train, y_train)
+    y_pred_lr = lr.predict(X_test)
+    metrics["LinearRegression"] = evaluate_cont(y_test, y_pred_lr)
+    metrics["LinearRegression"]["residuals"] = np.abs(y_test - np.clip(y_pred_lr, -3, 3)).tolist()
+
+    # Decision Tree
+    dt_params = MODEL_PARAMS.get("DecisionTree", {})
+    dt = DecisionTreeRegressor(**dt_params)
+    dt.fit(X_train, y_train)
+    y_pred_dt = dt.predict(X_test)
+    metrics["DecisionTree"] = evaluate_cont(y_test, y_pred_dt)
+    metrics["DecisionTree"]["residuals"] = np.abs(y_test - np.clip(y_pred_dt, -3, 3)).tolist()
+
+    # KNN (scale inputs)
+    knn_params = MODEL_PARAMS.get("KNN", {})
+    knn = Pipeline([("scaler", StandardScaler()), ("model", KNeighborsRegressor(**knn_params))])
+    knn.fit(X_train, y_train)
+    y_pred_knn = knn.predict(X_test)
+    metrics["KNN"] = evaluate_cont(y_test, y_pred_knn)
+    metrics["KNN"]["residuals"] = np.abs(y_test - np.clip(y_pred_knn, -3, 3)).tolist()
+
+    # SVM (SVR) (scale inputs)
+    svm_params = MODEL_PARAMS.get("SVM", {})
+    svm = Pipeline([("scaler", StandardScaler()), ("model", SVR(**svm_params))])
+    svm.fit(X_train, y_train)
+    y_pred_svm = svm.predict(X_test)
+    metrics["SVM"] = evaluate_cont(y_test, y_pred_svm)
+    metrics["SVM"]["residuals"] = np.abs(y_test - np.clip(y_pred_svm, -3, 3)).tolist()
+
+    # Random Forest
+    rf_params = MODEL_PARAMS.get("RandomForest", {})
+    rf = RandomForestRegressor(**rf_params)
     rf.fit(X_train, y_train)
-    metrics["RF"] = evaluate_cont(y_test, rf.predict(X_test))
+    y_pred_rf = rf.predict(X_test)
+    metrics["RandomForest"] = evaluate_cont(y_test, y_pred_rf)
+    metrics["RandomForest"]["residuals"] = np.abs(y_test - np.clip(y_pred_rf, -3, 3)).tolist()
 
-    # --- XGB ---
-    xgb = XGBRegressor(
-        objective="reg:squarederror",
-        n_estimators=400,
-        max_depth=5,
-        learning_rate=0.1,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        reg_lambda=1.0,
-        n_jobs=-1,
-        random_state=42,
-        eval_metric="rmse",
-    )
+    # XGBoost
+    xgb_params = MODEL_PARAMS.get("XGBoost", {})
+    xgb = XGBRegressor(**xgb_params)
     xgb.fit(X_train, y_train)
-    metrics["XGB"] = evaluate_cont(y_test, xgb.predict(X_test))
-
-    # --- SVR (scaled) ---
-    svr = Pipeline([("scaler", StandardScaler()), ("model", SVR(C=10.0, epsilon=0.1, kernel="rbf"))])
-    svr.fit(X_train, y_train)
-    metrics["SVR"] = evaluate_cont(y_test, svr.predict(X_test))
-
-    # --- "LSTM" (FAKE via MLP, tanpa TensorFlow) ---
-    scaler_nn = StandardScaler()
-    Xtr = scaler_nn.fit_transform(X_train)
-    Xte = scaler_nn.transform(X_test)
-    Xtr_lstm = Xtr.reshape((-1, 1, Xtr.shape[1]))
-    Xte_lstm = Xte.reshape((-1, 1, Xte.shape[1]))
-
-    n_features = X_train.shape[1]  # <<<< BUKAN X_full
-    lstm = make_lstm(n_features=n_features)
-    lstm.fit(Xtr_lstm, y_train, epochs=40, batch_size=16, verbose=0)  # param dibiarkan agar kompatibel
-    y_pred_lstm = lstm.predict(Xte_lstm)
-    metrics["LSTM"] = evaluate_cont(y_test, y_pred_lstm)
+    y_pred_xgb = xgb.predict(X_test)
+    metrics["XGBoost"] = evaluate_cont(y_test, y_pred_xgb)
+    metrics["XGBoost"]["residuals"] = np.abs(y_test - np.clip(y_pred_xgb, -3, 3)).tolist()
 
     return metrics
 
 
 def refit_final_model(best_model_name: str, X_full: np.ndarray, y_full: np.ndarray):
-    """Refit full data untuk model terbaik dan kembalikan objek final_model.
+    """Refit model terbaik pada seluruh data dan kembalikan model final.
 
-    Catatan:
-    - Untuk 'LSTM' palsu, final_model disimpan sebagai dict {"model": <FakeLSTM>, "scaler": <StandardScaler>}.
+    Nama `best_model_name` harus salah satu dari:
+    "LinearRegression", "DecisionTree", "KNN", "SVM", "RandomForest", "XGBoost".
     """
-    if best_model_name == "RF":
-        rf_final = RandomForestRegressor(n_estimators=200, max_depth=None, random_state=42, n_jobs=-1)
-        rf_final.fit(X_full, y_full)
-        return rf_final
 
-    elif best_model_name == "XGB":
-        xgb_final = XGBRegressor(
-            objective="reg:squarederror",
-            n_estimators=400,
-            max_depth=5,
-            learning_rate=0.1,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            reg_lambda=1.0,
-            n_jobs=-1,
-            random_state=42,
-            eval_metric="rmse",
-        )
-        xgb_final.fit(X_full, y_full)
-        return xgb_final
+    if best_model_name == "LinearRegression":
+        params = MODEL_PARAMS.get("LinearRegression", {})
+        model = LinearRegression(**params)
+        model.fit(X_full, y_full)
+        return model
 
-    elif best_model_name == "SVR":
-        svr_final = Pipeline([("scaler", StandardScaler()), ("model", SVR(C=10.0, epsilon=0.1, kernel="rbf"))])
-        svr_final.fit(X_full, y_full)
-        return svr_final
+    if best_model_name == "DecisionTree":
+        params = MODEL_PARAMS.get("DecisionTree", {})
+        model = DecisionTreeRegressor(**params)
+        model.fit(X_full, y_full)
+        return model
 
-    else:  # "LSTM" (FAKE via MLP) — TANPA TensorFlow
-        scaler_full = StandardScaler()
-        Xs_full = scaler_full.fit_transform(X_full)
-        X_full_lstm = Xs_full.reshape((-1, 1, Xs_full.shape[1]))
-        n_features = X_full.shape[1]
+    if best_model_name == "KNN":
+        params = MODEL_PARAMS.get("KNN", {})
+        model = Pipeline([("scaler", StandardScaler()), ("model", KNeighborsRegressor(**params))])
+        model.fit(X_full, y_full)
+        return model
 
-        lstm_full = make_lstm(n_features=n_features)
-        lstm_full.fit(X_full_lstm, y_full, epochs=40, batch_size=16, verbose=0)
+    if best_model_name == "SVM":
+        params = MODEL_PARAMS.get("SVM", {})
+        model = Pipeline([("scaler", StandardScaler()), ("model", SVR(**params))])
+        model.fit(X_full, y_full)
+        return model
 
-        # Konsisten dengan /predict: dict berisi model & scaler
-        return {"model": lstm_full, "scaler": scaler_full}
+    if best_model_name == "RandomForest":
+        params = MODEL_PARAMS.get("RandomForest", {})
+        model = RandomForestRegressor(**params)
+        model.fit(X_full, y_full)
+        return model
+
+    if best_model_name == "XGBoost":
+        params = MODEL_PARAMS.get("XGBoost", {})
+        model = XGBRegressor(**params)
+        model.fit(X_full, y_full)
+        return model
+
+    raise ValueError(f"Unknown model name: {best_model_name}")
